@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens as CSS variables (mirrors lib/core/theme) ───────────── */
+:root {
+  --primary: #005f02;
+  --primary-dark: #004001;
+  --primary-light: #008003;
+  --primary-xlight: #e6f0e6;
+  --canvas: #f0eee9;
+  --surface: #fafaf7;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--primary);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    system-ui, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Typography component classes (from AppTextStyles) ─────────────────── */
+@layer components {
+  .t-display {
+    @apply font-black text-primary;
+    font-size: 40px;
+    letter-spacing: -1.6px;
+    line-height: 0.9;
+  }
+  .t-heading {
+    @apply font-black text-primary;
+    font-size: 28px;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .t-card-title {
+    @apply font-extrabold text-primary;
+    font-size: 20px;
+    letter-spacing: -0.4px;
+    line-height: 1.15;
+  }
+  .t-page-title {
+    @apply font-extrabold text-primary;
+    font-size: 17px;
+    letter-spacing: -0.3px;
+    line-height: 1.1;
+  }
+  .t-body {
+    @apply font-normal text-slate-600;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .t-body-bold {
+    @apply font-semibold text-slate-600;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .t-eyebrow {
+    @apply font-bold text-slate-400 uppercase;
+    font-size: 10px;
+    letter-spacing: 1.8px;
+  }
+  .t-micro {
+    @apply font-bold text-slate-400 uppercase;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+  }
+  .t-pill {
+    @apply font-bold text-primary uppercase;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  .t-price {
+    @apply font-extrabold text-primary;
+    font-size: 22px;
+    letter-spacing: -0.6px;
+    line-height: 1;
+  }
+  .t-price-mega {
+    @apply font-black text-primary;
+    font-size: 26px;
+    letter-spacing: -0.8px;
+    line-height: 1;
+  }
+  .t-stat {
+    @apply font-extrabold text-primary;
+    font-size: 22px;
+    letter-spacing: -0.6px;
+    line-height: 1;
+  }
+  .t-cta {
+    @apply font-extrabold text-white uppercase;
+    font-size: 13px;
+    letter-spacing: 1.6px;
+  }
+  .t-wordmark {
+    @apply font-black text-primary;
+    font-size: 16px;
+    letter-spacing: -0.3px;
+  }
+}
+
+/* Hide scrollbars on horizontal scrollers (date pills, slot grid) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

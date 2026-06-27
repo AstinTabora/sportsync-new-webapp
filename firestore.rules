@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Role/status now live on the caller's ownerProfiles doc (not custom
+    // claims), so the admin web app needs no Cloud Functions to gate writes.
+    function ownerData() {
+      return get(/databases/$(database)/documents/ownerProfiles/$(request.auth.uid)).data;
+    }
+    function hasProfile() {
+      return request.auth != null
+             && exists(/databases/$(database)/documents/ownerProfiles/$(request.auth.uid));
+    }
+    function isApprovedOwner() {
+      return hasProfile() && ownerData().status == 'approved';
+    }
+    function isSuperAdmin() {
+      return hasProfile() && ownerData().role == 'superAdmin';
+    }
+    function ownsCourt(cid) {
+      return get(/databases/$(database)/documents/courts/$(cid)).data.ownerId == request.auth.uid;
+    }
+
+    // Bookings — the booking's own user can read; an approved court owner can
+    // read bookings for courts they own. Writes are server-only (admin SDK
+    // bypasses), except the narrow cash-booking create from the mobile app.
+    match /bookings/{refCode} {
+      allow read: if request.auth != null
+                  && (
+                    resource.data.userId == request.auth.uid
+                    || (isApprovedOwner()
+                        && exists(/databases/$(database)/documents/courts/$(resource.data.courtId))
+                        && get(/databases/$(database)/documents/courts/$(resource.data.courtId)).data.ownerId == request.auth.uid)
+                  );
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.payment == 'cash';
+      allow update, delete: if false;
+    }
+
+    // App user profiles — each signed-in user owns the doc keyed by their uid.
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
+    // Court owner profiles. A user self-creates their own doc as 'pending' on
+    // signup; they can edit their display fields but can NEVER change their own
+    // status/role (no self-approval / self-promotion). Approval is an
+    // out-of-band write (Firebase Console / Admin SDK, which bypass rules), or
+    // a super admin updating someone else's doc.
+    match /ownerProfiles/{uid} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == uid || isSuperAdmin());
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.status == 'pending'
+                    && (!('role' in request.resource.data)
+                        || request.resource.data.role == 'courtOwner');
+      allow update: if request.auth != null
+                    && (
+                      (request.auth.uid == uid
+                       && request.resource.data.status == resource.data.status
+                       && request.resource.data.get('role', 'courtOwner')
+                          == resource.data.get('role', 'courtOwner'))
+                      || isSuperAdmin()
+                    );
+      allow delete: if isSuperAdmin();
+    }
+
+    // Courts — publicly readable so customers can browse. Writable only by an
+    // approved owner who owns the doc (ownerId), or a super admin.
+    match /courts/{courtId} {
+      allow read: if true;
+      allow create: if isApprovedOwner()
+                    && request.resource.data.ownerId == request.auth.uid;
+      allow update: if (isApprovedOwner()
+                        && resource.data.ownerId == request.auth.uid
+                        && request.resource.data.ownerId == resource.data.ownerId)
+                    || isSuperAdmin();
+      allow delete: if (isApprovedOwner()
+                        && resource.data.ownerId == request.auth.uid)
+                    || isSuperAdmin();
+
+      // Weekly schedule — same ownership gate as the parent court.
+      match /schedule/{day} {
+        allow read: if true;
+        allow write: if (isApprovedOwner() && ownsCourt(courtId)) || isSuperAdmin();
+      }
+
+      // Block-outs — read public (mobile computes availability); written
+      // client-side by the owning approved court owner.
+      match /blockouts/{blockoutId} {
+        allow read: if true;
+        allow write: if (isApprovedOwner() && ownsCourt(courtId)) || isSuperAdmin();
+      }
+    }
+
+    // Slot holds — transient locks on a slot bundle.
+    match /slotHolds/{holdId} {
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'active';
+      allow read: if request.auth != null;
+      allow update: if request.auth != null
+                    && (
+                      (resource.data.userId == request.auth.uid
+                       && request.resource.data.status == 'cancelled')
+                      ||
+                      (request.resource.data.userId == request.auth.uid
+                       && request.resource.data.status == 'active'
+                       && (resource.data.userId == request.auth.uid
+                           || resource.data.status != 'active'
+                           || resource.data.expiresAt < request.time))
+                    );
+      allow delete: if false;
+    }
+
+    // Payment events — webhook idempotency log. Server-only.
+    match /paymentEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    // Booked slots — publicly readable so the calendar can show taken slots.
+    // Written only by the webhook (admin SDK bypasses).
+    match /bookedSlots/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Court cover images. Publicly readable so both the mobile app and the
+    // admin dashboard can display them. Any signed-in user may upload an image
+    // (≤5MB) under a court's folder — the path is namespaced by courtId and the
+    // sensitive write (the court doc itself) is gated by Firestore rules.
+    match /courts/{courtId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Everything else is locked down.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

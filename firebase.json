@@ -1,0 +1,51 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "sportsync-376d7",
+          "appId": "1:412008010823:android:01406ae829a3ed48978d62",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "sportsync-376d7",
+          "configurations": {
+            "ios": "1:412008010823:ios:221babb1ffdd058b978d62"
+          }
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "sportsync-376d7",
+          "appId": "1:412008010823:ios:221babb1ffdd058b978d62",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs20",
+      "predeploy": [],
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}

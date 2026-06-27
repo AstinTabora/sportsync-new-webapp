@@ -1,0 +1,28 @@
+{
+  "name": "sportsync-functions",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "register-webhook": "npm run build && node lib/scripts/registerWebhook.js",
+    "simulate-webhook": "npm run build && node lib/scripts/simulateWebhook.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4"
+  }
+}
