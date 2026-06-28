@@ -13,7 +13,7 @@ import 'package:sportsync/firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (kReleaseMode && !Env.isConfigured) {
+  if (kReleaseMode && !kIsWeb && !Env.isConfigured) {
     throw StateError(
       'PAYMONGO_PUBLIC_KEY is missing. Run with '
       '--dart-define=PAYMONGO_PUBLIC_KEY=pk_test_xxx',
